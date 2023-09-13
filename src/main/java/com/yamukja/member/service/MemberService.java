@@ -1,5 +1,7 @@
 package com.yamukja.member.service;
 
+import com.yamukja.exception.BusinessLogicException;
+import com.yamukja.exception.ExceptionCode;
 import com.yamukja.member.entity.Member;
 import com.yamukja.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +15,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 public class MemberService {
-    // todo 이후에 예외처리 더 친철하게 하는 방향으로 변경하기!
     private final MemberRepository memberRepository;
 
     public Member createMember(Member member) {
@@ -36,9 +37,11 @@ public class MemberService {
 
     public Member findMember(Long memberId) {
         Optional<Member> optionalMember = memberRepository.findById(memberId);
-        Member member = optionalMember.orElseThrow(RuntimeException::new);
-        if (member.getMemberStatus() != Member.MemberStatus.MEMBER_ACTIVE) {
-            throw new RuntimeException();
+        Member member = optionalMember.orElseThrow(() -> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
+        if (member.getMemberStatus() == Member.MemberStatus.MEMBER_SLEEP) {
+            throw new BusinessLogicException(ExceptionCode.MEMBER_STATUS_SLEEP);
+        } else if (member.getMemberStatus() == Member.MemberStatus.MEMBER_QUIT) {
+            throw new BusinessLogicException(ExceptionCode.MEMBER_STATUS_QUIT);
         }
         return member;
     }
@@ -58,7 +61,7 @@ public class MemberService {
     private void verifyExistsEmail(String email) {
         Optional<Member> optionalMember = memberRepository.findByEmail(email);
         if (optionalMember.isPresent()) {
-            throw new RuntimeException();
+            throw new BusinessLogicException(ExceptionCode.MEMBER_EXISTS);
         }
     }
 }
