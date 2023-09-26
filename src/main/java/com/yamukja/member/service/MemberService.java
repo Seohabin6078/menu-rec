@@ -4,7 +4,9 @@ import com.yamukja.exception.BusinessLogicException;
 import com.yamukja.exception.ExceptionCode;
 import com.yamukja.member.entity.Member;
 import com.yamukja.member.repository.MemberRepository;
+import com.yamukja.security.utils.CustomAuthorityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,9 +18,16 @@ import java.util.Optional;
 @Service
 public class MemberService {
     private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final CustomAuthorityUtils authorityUtils;
 
     public Member createMember(Member member) {
         verifyExistsEmail(member.getEmail());
+        String encryptedPassword = passwordEncoder.encode(member.getPassword());
+        member.changePassword(encryptedPassword);
+
+        List<String> roles = authorityUtils.createRoles(member.getEmail());
+        member.createRoles(roles);
 
         return memberRepository.save(member);
     }
@@ -26,7 +35,7 @@ public class MemberService {
     public Member updateMember(Member member) {
         Member findMember = findMember(member.getMemberId());
         Optional.ofNullable(member.getPassword())
-                .ifPresent(findMember::changePassword);
+                .ifPresent(password -> findMember.changePassword(passwordEncoder.encode(password)));
         Optional.ofNullable(member.getDisplayName())
                 .ifPresent(findMember::changeDisplayName);
         Optional.ofNullable(member.getMemberStatus())

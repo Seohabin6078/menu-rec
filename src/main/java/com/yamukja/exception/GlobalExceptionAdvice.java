@@ -56,11 +56,11 @@ public class GlobalExceptionAdvice {
     }
 
     // db의 무결성을 위반한 경우(db 컬럼 제약 조건 위반)
-//    @ExceptionHandler
-//    @ResponseStatus(HttpStatus.BAD_REQUEST)
-//    public ErrorResponse handleDataIntegrityViolationException(DataIntegrityViolationException e) {
-//        return ErrorResponse.of(HttpStatus.BAD_REQUEST, e.getMessage());
-//    }
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse.Basic handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+        return ErrorResponse.Basic.of(HttpStatus.BAD_REQUEST, e.getCause().getMessage());
+    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
