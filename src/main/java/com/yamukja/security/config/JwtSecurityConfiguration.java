@@ -1,18 +1,28 @@
 package com.yamukja.security.config;
 
 import com.yamukja.security.filter.JwtAuthenticationFilter;
+import com.yamukja.security.filter.JwtVerificationFilter;
+import com.yamukja.security.handler.MemberAccessDeniedHandler;
+import com.yamukja.security.handler.MemberAuthenticationEntryPoint;
 import com.yamukja.security.handler.MemberAuthenticationFailureHandler;
 import com.yamukja.security.handler.MemberAuthenticationSuccessHandler;
 import com.yamukja.security.jwt.JwtTokenizer;
+import com.yamukja.security.utils.CustomAuthorityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -24,8 +34,9 @@ import static org.springframework.security.config.Customizer.*;
 
 @RequiredArgsConstructor
 @Configuration
-public class SecurityConfiguration {
+public class JwtSecurityConfiguration {
     private final JwtTokenizer jwtTokenizer;
+    private final CustomAuthorityUtils authorityUtils;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -54,14 +65,23 @@ public class SecurityConfiguration {
                 .and()
                 .csrf().disable()
                 .cors(withDefaults()) // withDefaults()를 적용하면 corsConfigurationSource라는 이름으로 등록된 Bean을 이용한다.
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
                 .formLogin().disable()
                 .httpBasic().disable()
+                .exceptionHandling()
+                .authenticationEntryPoint(new MemberAuthenticationEntryPoint()) // 여긴 왜 component 붙였는데 new로 생성하였는가?
+                .accessDeniedHandler(new MemberAccessDeniedHandler())
+                .and()
                 .apply(new CustomFilterConfigurer())
                 .and()
                 .authorizeHttpRequests(authorize -> authorize
+                        .antMatchers(HttpMethod.POST, "/members").permitAll()
+                        .antMatchers(HttpMethod.PATCH, "/members/**").hasRole("USER")
+                        .antMatchers(HttpMethod.GET, "/members/**").hasAnyRole("USER", "ADMIN")
+                        .antMatchers(HttpMethod.DELETE, "/members/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().permitAll()
                 );
-
         return http.build();
     }
 
@@ -90,7 +110,11 @@ public class SecurityConfiguration {
             jwtAuthenticationFilter.setFilterProcessesUrl("/login"); // "/login"이 디폴트라 생략가능
             jwtAuthenticationFilter.setAuthenticationSuccessHandler(new MemberAuthenticationSuccessHandler()); // 일반적으로 인증을 위한 Security Filter마다 handler 구현 클래스를 각각 생성하기 때문에 new 키워드를 사용해도 무방하다.
             jwtAuthenticationFilter.setAuthenticationFailureHandler(new MemberAuthenticationFailureHandler());
-            builder.addFilter(jwtAuthenticationFilter);
+
+            JwtVerificationFilter jwtVerificationFilter = new JwtVerificationFilter(jwtTokenizer, authorityUtils);
+
+            builder.addFilter(jwtAuthenticationFilter)
+                    .addFilterAfter(jwtVerificationFilter, JwtAuthenticationFilter.class);
         }
     }
 }

@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.yamukja.member.dto.MemberDto;
 import com.yamukja.member.entity.Member;
 import com.yamukja.member.mapper.MemberMapper;
-import com.yamukja.member.service.MemberService;
+import com.yamukja.member.service.JwtMemberService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ public class MemberControllerTest {
     private Gson gson;
 
     @MockBean  // 컨트롤러에서 사용하는 서비스가 @WebMvcTest로 인해 등록되지 않았기 때문에 @MockBean을 이용하여 의존성 대체
-    private MemberService memberService;
+    private JwtMemberService jwtMemberService;
 
     @MockBean
     private MemberMapper mapper;
@@ -54,7 +54,7 @@ public class MemberControllerTest {
                         .build();
 
         given(mapper.memberPostDtoToMember(Mockito.any(MemberDto.Post.class))).willReturn(new Member());
-        given(memberService.createMember(Mockito.any(Member.class))).willReturn(new Member());
+        given(jwtMemberService.createMember(Mockito.any(Member.class))).willReturn(new Member());
         given(mapper.memberToMemberResponseDto(Mockito.any(Member.class))).willReturn(response);
 
         //when
@@ -90,7 +90,7 @@ public class MemberControllerTest {
                         .build();
 
         given(mapper.memberPatchDtoToMember(Mockito.any(MemberDto.Patch.class))).willReturn(new Member());
-        given(memberService.updateMember(Mockito.any(Member.class))).willReturn(new Member());
+        given(jwtMemberService.updateMember(Mockito.any(Member.class))).willReturn(new Member());
         given(mapper.memberToMemberResponseDto(Mockito.any(Member.class))).willReturn(response);
 
         //when
@@ -117,7 +117,7 @@ public class MemberControllerTest {
                         .displayName("홍길동")
                         .build();
 
-        given(memberService.findMember(Mockito.anyLong())).willReturn(new Member());
+        given(jwtMemberService.findMember(Mockito.anyLong())).willReturn(new Member());
         given(mapper.memberToMemberResponseDto(Mockito.any(Member.class))).willReturn(response);
 
         //when
@@ -144,7 +144,7 @@ public class MemberControllerTest {
                         .displayName("홍길동")
                         .build();
 
-        given(memberService.deleteMember(Mockito.anyLong())).willReturn(new Member());
+        given(jwtMemberService.deleteMember(Mockito.anyLong())).willReturn(new Member());
         given(mapper.memberToMemberResponseDto(Mockito.any(Member.class))).willReturn(response);
 
         //when

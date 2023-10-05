@@ -2,11 +2,8 @@ package com.yamukja.member.service;
 
 import com.yamukja.member.entity.Member;
 import com.yamukja.member.repository.MemberRepository;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -18,12 +15,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class MemberServiceTest {
+public class JwtMemberServiceTest {
     @Mock
     private MemberRepository memberRepository;
 
     @InjectMocks
-    private MemberService memberService;
+    private JwtMemberService jwtMemberService;
 
     @Test
     void 중복회원_가입방지_테스트() {
@@ -31,7 +28,7 @@ public class MemberServiceTest {
         given(memberRepository.findByEmail(Mockito.anyString())).willReturn(Optional.of(new Member()));
 
         //when //then
-        assertThrows(RuntimeException.class, () -> memberService.createMember(new Member()));
+        assertThrows(RuntimeException.class, () -> jwtMemberService.createMember(new Member()));
     }
 
     @Test
@@ -46,6 +43,6 @@ public class MemberServiceTest {
         given(memberRepository.findById(Mockito.anyLong())).willReturn(Optional.of(member));
 
         //when //then
-        assertThrows(RuntimeException.class, () -> memberService.findMember(1L));
+        assertThrows(RuntimeException.class, () -> jwtMemberService.findMember(1L));
     }
 }

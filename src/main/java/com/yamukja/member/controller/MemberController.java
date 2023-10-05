@@ -3,6 +3,7 @@ package com.yamukja.member.controller;
 import com.yamukja.member.dto.MemberDto;
 import com.yamukja.member.entity.Member;
 import com.yamukja.member.mapper.MemberMapper;
+import com.yamukja.member.service.JwtMemberService;
 import com.yamukja.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
