@@ -31,6 +31,7 @@ public class Member extends Auditable {
     private MemberStatus memberStatus = MemberStatus.MEMBER_ACTIVE;
 
     @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "member_role", joinColumns = @JoinColumn(name = "member_id", referencedColumnName = "memberId"))
     private List<String> roles = new ArrayList<>();
 
     public void createRoles(List<String> roles) {
